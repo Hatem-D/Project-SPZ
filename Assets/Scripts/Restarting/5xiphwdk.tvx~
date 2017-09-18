@@ -1,0 +1,119 @@
+﻿using System;
+using UnityEngine;
+using System.Collections;
+
+public class BackgroundScrolling : MonoBehaviour, IUsesGameStates {
+
+	public float scrollSpeed;	
+	public Transform resetPosition;
+	
+	private Vector3 startPosition;
+
+	GameStatesController gameGameStates;
+	GlobalVars gameVars;
+
+	delegate float speedFunctionPointer();
+	speedFunctionPointer speedMod;
+
+	public delegate void stateDependantFunctionPointer();
+	public stateDependantFunctionPointer doStateStuff;
+
+	public void RegisterToGameStateChangeEvents(){
+		gameGameStates.ChangeState += OnGameStateChange;
+	}
+
+	public void OnGameStateChange(object sender, StateChangeEventArgs e){
+		Debug.Log(StateTools.ToString(e.NewState));
+        Invoke(StateTools.ToString(e.NewState),0.0f);
+	}
+
+	void Awake ()
+	{
+		gameVars = GameObject.FindGameObjectWithTag (GlobalTags.GameManager).GetComponent<GlobalVars> ();
+		gameGameStates = GameObject.FindGameObjectWithTag (GlobalTags.GameManager).GetComponent<GameStatesController> ();
+		startPosition = transform.position;
+		RegisterToGameStateChangeEvents ();
+	}
+	
+	void Update ()
+	{
+		transform.position = transform.position + Vector3.left * scrollSpeed /* speedMod() */* 2.0f * Time.deltaTime;
+		if (transform.position.x < resetPosition.position.x){
+			transform.position = startPosition;
+		}
+			
+		if (doStateStuff!=null) {
+			doStateStuff();
+		}
+	}
+
+
+	public void Intro(){Debug.Log ("It's Alive Sigmund");}
+	public void Menu(){}
+	public void Help(){}
+	public void Beginning(){}
+	public void Game(){}
+	public void Pause(){}
+	public void ExitPause(){}
+	public void Reload(){}
+	public void Restart(){}
+	public void GameOver(){}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	void SetGameState(GameStates state){		
+		switch (state) {
+		case GameStates.Intro:
+			SetIntroBehavior ();
+			break;
+		case GameStates.Beginning:
+			SetBeginningBehavior ();
+			break;
+		case GameStates.Game:
+			SetGameBehavior ();
+			break;
+		case GameStates.Pause:
+			SetPauseBehavior ();
+			break;
+		default :
+			break;
+		}
+	}
+
+	void SetIntroBehavior(){
+		speedMod = getIntroSpeedMod;
+	}
+	void SetBeginningBehavior (){
+		speedMod = getIntroSpeedMod;
+	}
+	void SetGameBehavior (){
+		speedMod = getGameSpeedMod;
+	}
+	void SetPauseBehavior (){
+		speedMod = getPauseSpeedMod;
+	}
+
+	float getIntroSpeedMod(){
+		return 0.5f;
+	}
+
+	float getGameSpeedMod(){
+		return gameVars.gameSpeed;
+	}
+
+	float getPauseSpeedMod(){
+		return 0.0f;
+	}
+}

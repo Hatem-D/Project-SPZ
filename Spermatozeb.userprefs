@@ -1,0 +1,23 @@
+﻿<Properties StartupItem="Assembly-CSharp.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Restarting\SPZController.cs">
+    <Files>
+      <File FileName="Assets\Scripts\Restarting\LevelsController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\MacrophageManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\MacrophageController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\BlockController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\ObstacleController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\SPZController.cs" Line="302" Column="43" />
+      <File FileName="Assets\Scripts\Restarting\BackgroundScrolling.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\GlobalVars.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\BodyCollision.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\MouthCollision.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\GameStatesController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Restarting\BacDeath.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
