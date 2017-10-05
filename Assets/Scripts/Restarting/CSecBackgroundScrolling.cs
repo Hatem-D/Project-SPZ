@@ -41,7 +41,7 @@ public class CSecBackgroundScrolling : MonoBehaviour, IUsesGameStates {
         //handler("test");
     }
 	
-	void Update ()
+	void FixedUpdate ()
 	{
         if (doStateStuff !=null)
             doStateStuff();        

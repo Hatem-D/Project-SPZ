@@ -60,8 +60,25 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
     playerStates currentPlayerState = playerStates.Resting;
     enum playerCollisionStates { Invulnerable, Vulnerable}
     playerCollisionStates currentCollisionState;
-    enum controllerModes { FreeMove, Lines, Jetpack }
+    public enum controllerModes { FreeMove, Lines, Jetpack }
     controllerModes currentControllerMode = controllerModes.Jetpack;
+
+    public void SetNextCtrlMode()
+    {
+        if ((int)currentControllerMode == 2) currentControllerMode = controllerModes.FreeMove;
+        else currentControllerMode++;
+        SetNewControllerMode(currentControllerMode);
+    }
+    public void SetPreviousCtrlMode()
+    {
+        if ((int)currentControllerMode == 0) currentControllerMode = controllerModes.Jetpack;
+        else currentControllerMode--;
+        SetNewControllerMode(currentControllerMode);
+    }
+    public controllerModes GetCtrlMode()
+    {
+        return currentControllerMode;
+    }
 
     void SetNewControllerMode(controllerModes newCtrl)
     {
@@ -78,6 +95,14 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
                 break;
             case controllerModes.Lines:
                 currentControllerMode = controllerModes.Lines;
+                setRestingParams = SetRestingParamsLines;
+                setMonitorPullParams = SetMonitorPullParamsLines;
+                setGrabbedParams = SetGrabbedParamsLines;
+                setBoostOnEndDragParams = SetBoostOnEndDragParamsLines;
+                setInBoostParams = SetInBoostParamsLines;
+                setBoostStartedParams = SetBoostStartedParamsLines;
+
+                linesMgr = gameVars.linesHolder;
                 break;
             case controllerModes.Jetpack:
                 currentControllerMode = controllerModes.Jetpack;
@@ -141,7 +166,7 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
     int maxFood = 4;
 
     private Vector3 grabbedScreenPosition;
-	private Vector3 offset;
+	//private Vector3 offset;
     private float myLeftLimit;
 
 	// Use this for initialization
@@ -178,7 +203,7 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
     SetParamsFunctionPointer setBoostStartedParams;
 
     void SetPlayerStateParams() {
-        //Debug.Log("state switching to " + currentPlayerState);
+        Debug.Log("state switching to " + currentPlayerState);
         switch (currentPlayerState) {
             case playerStates.Resting:
                 setRestingParams();
@@ -210,7 +235,7 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
 		gameVars.playerDefaultX = gameVars.PlayerRestingPosition;
 		doPlayerStateStuff = HandleHRestedSliding;
 		doPlayerStateStuff += ClickSetTargetVector;
-		doPlayerStateStuff += HandleVSliding;
+		doPlayerStateStuff += HandleVSliding;        
     }
     void SetMonitorPullParamsFreeMove()
     {
@@ -250,8 +275,7 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
     #region SetParamsJetpack
     void SetRestingParamsJetpack()
     {
-        gameVars.playerDefaultX = gameVars.PlayerRestingPosition;
-        fallAcceleration -= 10.0f;   
+        gameVars.playerDefaultX = gameVars.PlayerRestingPosition;           
         doPlayerStateStuff = HandleHRestedSliding;        
         doPlayerStateStuff += Swim;
         doPlayerStateStuff += FallAcceleration;
@@ -282,6 +306,47 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
         doPlayerStateStuff += TemporizeDoubleClick;
     }
     void SetBoostStartedParamsJetpack()
+    {
+        doPlayerStateStuff = null;        
+        doPlayerStateStuff = HandleVSliding;
+        doPlayerStateStuff += HandleHBoostedSliding;
+        doubleClickTimer = 0.0f;
+        doPlayerStateStuff += MonitorDoubleClick;
+    }
+    #endregion
+
+    #region SetParamsLines
+    void SetRestingParamsLines()
+    {
+        gameVars.playerDefaultX = gameVars.PlayerRestingPosition;
+        doPlayerStateStuff = HandleHRestedSliding;        
+        doPlayerStateStuff += HandleVSliding;
+        doPlayerStateStuff += MonitorVerticalSwipe;
+    }
+    void SetMonitorPullParamsLines()
+    {
+        doPlayerStateStuff = HandleVSliding;
+        doPlayerStateStuff += HandleHRestedSliding;
+        doPlayerStateStuff += MonitorXBoostStart;
+    }
+    void SetGrabbedParamsLines() { }
+    void SetBoostOnEndDragParamsLines()
+    {
+        avatar.SetBool("Grabbed", true);
+        doPlayerStateStuff = HandleHRestedSliding;
+        SetCurrentCollisionState(playerCollisionStates.Invulnerable);
+
+        Invoke("OnEndDrag", 0.5f);
+    }
+    void SetInBoostParamsLines()
+    {
+        StartBoost();        
+        doPlayerStateStuff = HandleVSliding;
+        doPlayerStateStuff += HandleHBoostedSliding;
+        doubleClickTimer = 0.0f;
+        doPlayerStateStuff += TemporizeDoubleClick;
+    }
+    void SetBoostStartedParamsLines()
     {
         doPlayerStateStuff = null;        
         doPlayerStateStuff = HandleVSliding;
@@ -339,9 +404,69 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
     public float swimDownOffset;
     public float swimUpSpeed;    
     public float swimDownSpeed;
+    public float fallAccelerationRate = 0.1f;
+
+
     bool swimmingUp;
     float fallAcceleration = 0.0f;
     #endregion
+
+    #region Lines parameters
+    public float swipeMinMagnitude = 0.5f;
+    public float LaneChangeSpeed = 1.0f;
+    public float swipeMagnitude = 0;
+    public float laneThickness = 0.05f;
+
+    float swipeStart = 0;    
+    bool swiping = false;
+    LinesManager linesMgr;
+    #endregion
+
+
+
+    void MonitorVerticalSwipe()//for lines mode
+    {
+        if (!swiping)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                Debug.Log("Swipe start");
+                Vector3 mouseDown = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0.0f));
+                if (gameVars.IsInGameScreen(mouseDown))
+                {
+                    swipeStart = mouseDown.y;
+                    swiping = true;
+                }
+            }
+        }
+        else if (swiping)
+        {
+            if (Input.GetMouseButtonUp(0))
+            {
+                Debug.Log("Swipe end");
+                Vector3 mouseDown = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0.0f));
+                swiping = false;
+                swipeMagnitude = mouseDown.y - swipeStart;
+                if (swipeMagnitude > swipeMinMagnitude) LaneUp();
+                else if (swipeMagnitude < -swipeMinMagnitude) LaneDown();
+            }
+        }
+
+    }
+
+    void LaneUp()
+    {
+        Debug.Log("Lane Up : " + linesMgr.GetUpperLane(transform.position.y, laneThickness));
+        targetY = TrimTargetVectorY(linesMgr.GetUpperLane(transform.position.y, laneThickness));
+        allowVSlide = true;
+    }
+
+    void LaneDown()
+    {
+        Debug.Log("Lane Down : " + linesMgr.GetLowerLane(transform.position.y, laneThickness));
+        targetY = TrimTargetVectorY(linesMgr.GetLowerLane(transform.position.y, laneThickness));
+        allowVSlide = true;
+    }
 
     void Swim()
     {
@@ -352,16 +477,18 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
                 transform.position = new Vector2(transform.position.x, Mathf.LerpUnclamped(transform.position.y, targetY, swimUpSpeed * Time.deltaTime));
             } else {swimmingUp = false;}
         }
-        else
+        else if (Mathf.Abs(transform.position.x - gameVars.PlayerDefaultX) < 0.75f)
         {
             transform.position = new Vector2(transform.position.x, 
                 Mathf.LerpUnclamped(transform.position.y, TrimTargetVectorY(transform.position.y - swimDownOffset), (swimDownSpeed + fallAcceleration )* Time.deltaTime));
         }
+        
     }
 
     void FallAcceleration()
     {
-        fallAcceleration += 0.1f;
+        if (Mathf.Abs(transform.position.x - gameVars.PlayerDefaultX) < 0.75f)
+            fallAcceleration += fallAccelerationRate;
     }
 
     void MonitorJetpackClick()
@@ -454,7 +581,7 @@ public class SPZController : MonoBehaviour, IUsesGameStates {
 
     public void OnBeginDrag (){        
 		grabbedScreenPosition = new Vector3(Input.mousePosition.x, Input.mousePosition.y, transform.position.z);
-		offset = gameObject.transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, transform.position.z));
+		//offset = gameObject.transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, transform.position.z));
 		if (currentPlayerState == playerStates.Resting || currentPlayerState == playerStates.BoostEnding )
         {
             currentPlayerState = playerStates.MonitorPull;

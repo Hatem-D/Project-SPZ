@@ -166,7 +166,7 @@ public class LevelsController : MonoBehaviour, IUsesGameStates
     }
 
     // Update is called once per frame
-    void Update () {
+    void FixedUpdate () {
 	    if (doStateStuff != null)
         {
             doStateStuff();

@@ -79,6 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\InspectorHelp\SphereGizmo.cs" />
+    <Compile Include="Assets\Scripts\Restarting\AndroidCtrlModeControls.cs" />
     <Compile Include="Assets\Scripts\Restarting\AndroidDebugLog.cs" />
     <Compile Include="Assets\Scripts\Restarting\AndroidSpeedControls.cs" />
     <Compile Include="Assets\Scripts\Restarting\BacDeath.cs" />

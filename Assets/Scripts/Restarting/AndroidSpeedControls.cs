@@ -7,10 +7,8 @@ public class AndroidSpeedControls : MonoBehaviour {
 
     public Text textComp;
     public GameSpeedManager gsm;
-    // Use this for initialization
-    void Start () {
-	    
-    }
+ 
+
 	
 	// Update is called once per frame
 	void Update () {

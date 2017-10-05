@@ -51,6 +51,8 @@ public class GlobalVars : MonoBehaviour {
 
     public float linearTranslationOffset = 5.0f;
 
+    public LinesManager linesHolder;
+
 	public float PlayerDefaultX
     {
 		get
@@ -103,6 +105,10 @@ public class GlobalVars : MonoBehaviour {
 
         //QualitySettings.vSyncCount = 0;
 		Application.targetFrameRate = 30;
+        if (linesHolder == null)
+        {
+            linesHolder = transform.GetComponentInChildren<LinesManager>();
+        }
     }
 
     public bool IsInGameScreen(Vector3 point)
